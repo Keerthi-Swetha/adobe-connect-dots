@@ -1,0 +1,40 @@
+# Use Python 3.9 slim image for AMD64 architecture
+FROM --platform=linux/amd64 python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    PyMuPDF==1.23.8 \
+    spacy==3.7.2 \
+    scikit-learn==1.3.2 \
+    numpy==1.24.3 \
+    scipy==1.11.4
+
+# Download spaCy English model (small version to stay under size limit)
+RUN python -m spacy download en_core_web_sm
+
+# Copy application code
+COPY . /app/
+
+# Create input and output directories
+RUN mkdir -p /app/input /app/output
+
+# Set permissions
+RUN chmod +x /app/main.py
+
+# Default command - will auto-detect processing mode
+CMD ["python", "main.py"]
